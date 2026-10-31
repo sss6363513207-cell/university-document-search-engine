@@ -1,0 +1,2 @@
+Operating systems manage processes and memory.
+Process scheduling controls CPU execution.

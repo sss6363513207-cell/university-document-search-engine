@@ -1,0 +1,5 @@
+This document is created for testing worker failure recovery.
+
+The parent process should detect a child process failure.
+
+The replacement worker should process this document successfully.

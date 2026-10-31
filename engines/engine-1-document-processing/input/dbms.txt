@@ -1,0 +1,2 @@
+Database management systems organize and manage data.
+Transactions maintain database consistency.
