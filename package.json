@@ -1,0 +1,25 @@
+{
+  "name": "engine-1",
+  "version": "1.0.0",
+  "description": "Multi-Process Document Processing Engine",
+  "main": "src/parent.js",
+  "scripts": {
+    "start": "node src/parent.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "multiprocessing",
+    "document-processing",
+    "ipc",
+    "operating-systems"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fast-xml-parser": "^5.11.2",
+    "jszip": "^3.10.2",
+    "mammoth": "^1.13.0",
+    "pdf-parse": "^1.1.1",
+    "tesseract.js": "^7.0.0"
+  }
+}
