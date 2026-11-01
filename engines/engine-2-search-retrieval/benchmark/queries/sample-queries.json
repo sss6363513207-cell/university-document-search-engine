@@ -1,0 +1,14 @@
+{
+  "queries": [
+    { "queryId": "Q001", "query": "database indexing" },
+    { "queryId": "Q002", "query": "operating system memory management" },
+    { "queryId": "Q003", "query": "network security encryption" },
+    { "queryId": "Q004", "query": "graph algorithms shortest path" },
+    { "queryId": "Q005", "query": "machine learning neural networks" },
+    { "queryId": "Q006", "query": "information retrieval ranking" },
+    { "queryId": "Q007", "query": "compiler lexical analysis" },
+    { "queryId": "Q008", "query": "distributed systems fault tolerance" },
+    { "queryId": "Q009", "query": "cloud computing virtualization" },
+    { "queryId": "Q010", "query": "cybersecurity computer protection" }
+  ]
+}

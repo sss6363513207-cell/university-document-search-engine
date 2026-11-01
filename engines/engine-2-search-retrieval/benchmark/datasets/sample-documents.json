@@ -1,0 +1,104 @@
+{
+  "documents": [
+    {
+      "documentId": "D001",
+      "title": "Database Management Systems",
+      "content": "Database management systems organize structured data using tables, relational models, SQL queries, transactions and indexing."
+    },
+    {
+      "documentId": "D002",
+      "title": "Database Indexing Techniques",
+      "content": "Database indexing improves query performance using B trees, hash indexes, inverted indexes and efficient data retrieval."
+    },
+    {
+      "documentId": "D003",
+      "title": "Operating System Processes",
+      "content": "Operating systems manage processes, threads, CPU scheduling, synchronization, memory management and interprocess communication."
+    },
+    {
+      "documentId": "D004",
+      "title": "Operating System Memory Management",
+      "content": "Memory management handles virtual memory, paging, segmentation, page replacement and memory allocation."
+    },
+    {
+      "documentId": "D005",
+      "title": "Computer Networks",
+      "content": "Computer networks support communication using TCP IP protocols, routing, switching, packet transmission and network security."
+    },
+    {
+      "documentId": "D006",
+      "title": "Network Security",
+      "content": "Network security protects communication through encryption, authentication, firewalls, secure protocols and intrusion detection."
+    },
+    {
+      "documentId": "D007",
+      "title": "Data Structures and Algorithms",
+      "content": "Data structures include arrays, linked lists, stacks, queues, trees and graphs. Algorithms support efficient searching and sorting."
+    },
+    {
+      "documentId": "D008",
+      "title": "Graph Algorithms",
+      "content": "Graph algorithms include breadth first search, depth first search, Dijkstra shortest path and minimum spanning trees."
+    },
+    {
+      "documentId": "D009",
+      "title": "Machine Learning Fundamentals",
+      "content": "Machine learning uses training datasets, classification, regression, supervised learning and unsupervised learning."
+    },
+    {
+      "documentId": "D010",
+      "title": "Deep Learning",
+      "content": "Deep learning uses neural networks, convolutional neural networks, backpropagation and optimization for complex prediction tasks."
+    },
+    {
+      "documentId": "D011",
+      "title": "Information Retrieval",
+      "content": "Information retrieval systems use document indexing, query processing, ranking algorithms, inverted indexes and relevance evaluation."
+    },
+    {
+      "documentId": "D012",
+      "title": "Search Engine Ranking",
+      "content": "Search engines rank documents using TF IDF, BM25, term frequency, inverse document frequency and document relevance."
+    },
+    {
+      "documentId": "D013",
+      "title": "Compiler Design",
+      "content": "Compiler design includes lexical analysis, syntax analysis, parsing, semantic analysis and code generation."
+    },
+    {
+      "documentId": "D014",
+      "title": "Software Engineering",
+      "content": "Software engineering covers requirements analysis, system design, testing, software maintenance and development methodologies."
+    },
+    {
+      "documentId": "D015",
+      "title": "Computer Architecture",
+      "content": "Computer architecture studies processors, registers, cache memory, instruction pipelines and memory hierarchy."
+    },
+    {
+      "documentId": "D016",
+      "title": "Cloud Computing",
+      "content": "Cloud computing provides scalable infrastructure, virtualization, distributed storage and on demand computing services."
+    },
+    {
+      "documentId": "D017",
+      "title": "Distributed Systems",
+      "content": "Distributed systems coordinate multiple computers through communication, replication, consistency and fault tolerance."
+    },
+    {
+      "documentId": "D018",
+      "title": "Artificial Intelligence",
+      "content": "Artificial intelligence includes reasoning, knowledge representation, intelligent agents, planning and machine learning."
+    },
+    {
+      "documentId": "D019",
+      "title": "Cybersecurity Fundamentals",
+      "content": "Cybersecurity protects computer systems against malware, unauthorized access, vulnerabilities and cyber attacks."
+    },
+    {
+      "documentId": "D020",
+      "title": "Data Mining",
+      "content": "Data mining discovers useful patterns through clustering, association rules, classification and statistical analysis."
+    }
+  ]
+}

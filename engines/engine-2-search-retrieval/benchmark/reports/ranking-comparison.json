@@ -1,0 +1,313 @@
+{
+  "experiment": "TF-IDF vs BM25",
+  "dataset": {
+    "documentCount": 20,
+    "queryCount": 10,
+    "judgementCount": 24,
+    "type": "Synthetic development dataset"
+  },
+  "configuration": {
+    "rounds": 10,
+    "warmupRunsPerQuery": 50,
+    "measurementRunsPerQuery": 200,
+    "bm25": {
+      "k1": 1.2,
+      "b": 0.75
+    },
+    "executionOrders": [
+      [
+        "bm25",
+        "tfidf"
+      ],
+      [
+        "bm25",
+        "tfidf"
+      ],
+      [
+        "bm25",
+        "tfidf"
+      ],
+      [
+        "tfidf",
+        "bm25"
+      ],
+      [
+        "tfidf",
+        "bm25"
+      ],
+      [
+        "tfidf",
+        "bm25"
+      ],
+      [
+        "bm25",
+        "tfidf"
+      ],
+      [
+        "bm25",
+        "tfidf"
+      ],
+      [
+        "bm25",
+        "tfidf"
+      ],
+      [
+        "bm25",
+        "tfidf"
+      ]
+    ]
+  },
+  "environment": {
+    "nodeVersion": "v20.19.5",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "cpu": "Apple M2",
+    "cpuCount": 8
+  },
+  "results": {
+    "summary": {
+      "tfidf": {
+        "precisionAt5": {
+          "mean": 0.39999999999999997,
+          "standardDeviation": 5.551115123125783e-17,
+          "minimum": 0.4,
+          "maximum": 0.4
+        },
+        "recallAt10": {
+          "mean": 0.8416666666666666,
+          "standardDeviation": 0,
+          "minimum": 0.8416666666666666,
+          "maximum": 0.8416666666666666
+        },
+        "MAP": {
+          "mean": 0.825,
+          "standardDeviation": 0,
+          "minimum": 0.825,
+          "maximum": 0.825
+        },
+        "MRR": {
+          "mean": 1,
+          "standardDeviation": 0,
+          "minimum": 1,
+          "maximum": 1
+        },
+        "ndcgAt10": {
+          "mean": 0.9352400924156186,
+          "standardDeviation": 0,
+          "minimum": 0.9352400924156186,
+          "maximum": 0.9352400924156186
+        },
+        "averageRankingLatencyMs": {
+          "mean": 0.00149799385,
+          "standardDeviation": 0.0006985113554693313,
+          "minimum": 0.0010561250000000002,
+          "maximum": 0.0029135
+        }
+      },
+      "bm25": {
+        "precisionAt5": {
+          "mean": 0.39999999999999997,
+          "standardDeviation": 5.551115123125783e-17,
+          "minimum": 0.4,
+          "maximum": 0.4
+        },
+        "recallAt10": {
+          "mean": 0.8416666666666666,
+          "standardDeviation": 0,
+          "minimum": 0.8416666666666666,
+          "maximum": 0.8416666666666666
+        },
+        "MAP": {
+          "mean": 0.8416666666666666,
+          "standardDeviation": 0,
+          "minimum": 0.8416666666666666,
+          "maximum": 0.8416666666666666
+        },
+        "MRR": {
+          "mean": 1,
+          "standardDeviation": 0,
+          "minimum": 1,
+          "maximum": 1
+        },
+        "ndcgAt10": {
+          "mean": 0.938846049083953,
+          "standardDeviation": 1.1102230246251565e-16,
+          "minimum": 0.9388460490839531,
+          "maximum": 0.9388460490839531
+        },
+        "averageRankingLatencyMs": {
+          "mean": 0.0016797895499999996,
+          "standardDeviation": 0.0008629877123782078,
+          "minimum": 0.0011931665,
+          "maximum": 0.0038128955
+        }
+      }
+    },
+    "individualRounds": {
+      "tfidf": [
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.0029135
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.0028645215000000003
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.0011144994999999999
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.001123271
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.0010561250000000002
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.00126475
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.001077771
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.0012480205
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.0011881465000000001
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.825,
+          "MRR": 1,
+          "ndcgAt10": 0.9352400924156186,
+          "averageRankingLatencyMs": 0.0011293335
+        }
+      ],
+      "bm25": [
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0038128955
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0028940219999999996
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0013159575000000001
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0012306865
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0012591885
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0013601039999999998
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0011931665
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0012771455
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.0012547915
+        },
+        {
+          "precisionAt5": 0.4,
+          "recallAt10": 0.8416666666666666,
+          "MAP": 0.8416666666666666,
+          "MRR": 1,
+          "ndcgAt10": 0.9388460490839531,
+          "averageRankingLatencyMs": 0.001199938
+        }
+      ]
+    }
+  }
+}

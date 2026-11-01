@@ -1,0 +1,37 @@
+{
+  "judgements": [
+    { "queryId": "Q001", "documentId": "D001", "relevance": 1 },
+    { "queryId": "Q001", "documentId": "D002", "relevance": 2 },
+    { "queryId": "Q001", "documentId": "D011", "relevance": 1 },
+    { "queryId": "Q001", "documentId": "D012", "relevance": 1 },
+
+    { "queryId": "Q002", "documentId": "D003", "relevance": 1 },
+    { "queryId": "Q002", "documentId": "D004", "relevance": 2 },
+
+    { "queryId": "Q003", "documentId": "D005", "relevance": 1 },
+    { "queryId": "Q003", "documentId": "D006", "relevance": 2 },
+    { "queryId": "Q003", "documentId": "D019", "relevance": 1 },
+
+    { "queryId": "Q004", "documentId": "D007", "relevance": 1 },
+    { "queryId": "Q004", "documentId": "D008", "relevance": 2 },
+
+    { "queryId": "Q005", "documentId": "D009", "relevance": 2 },
+    { "queryId": "Q005", "documentId": "D010", "relevance": 2 },
+    { "queryId": "Q005", "documentId": "D018", "relevance": 1 },
+
+    { "queryId": "Q006", "documentId": "D002", "relevance": 1 },
+    { "queryId": "Q006", "documentId": "D011", "relevance": 2 },
+    { "queryId": "Q006", "documentId": "D012", "relevance": 2 },
+
+    { "queryId": "Q007", "documentId": "D013", "relevance": 2 },
+
+    { "queryId": "Q008", "documentId": "D016", "relevance": 1 },
+    { "queryId": "Q008", "documentId": "D017", "relevance": 2 },
+
+    { "queryId": "Q009", "documentId": "D016", "relevance": 2 },
+    { "queryId": "Q009", "documentId": "D017", "relevance": 1 },
+
+    { "queryId": "Q010", "documentId": "D006", "relevance": 1 },
+    { "queryId": "Q010", "documentId": "D019", "relevance": 2 }
+  ]
+}
