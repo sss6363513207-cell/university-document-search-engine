@@ -1,0 +1,23 @@
+{
+  "name": "engine-3-persistent-index",
+  "version": "1.0.0",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node --env-file=.env.test --test --test-concurrency=1",
+    "test:unit": "node --env-file=.env.test --test --test-concurrency=1 test/unit",
+    "test:integration": "node --env-file=.env.test --test --test-concurrency=1 test/integration"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "dotenv": "^18.0.9",
+    "pg": "^8.23.1"
+  },
+  "type": "module"
+}
