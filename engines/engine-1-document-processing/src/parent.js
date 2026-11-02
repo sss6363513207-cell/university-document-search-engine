@@ -1,4 +1,3 @@
-
 const { fork } = require("node:child_process");
 const path = require("node:path");
 const fs = require("node:fs/promises");
@@ -7,10 +6,20 @@ const { prepareDocumentForEngine2 } = require("./integration/engine2Adapter");
 // Configuration
 const WORKER_COUNT = 3;
 const MAX_RETRIES = 2;
-const DOCUMENT_TIMEOUT_MS = 120000; // 120 seconds
+const DOCUMENT_TIMEOUT_MS = 120000;
 
 const workerPath = path.join(__dirname, "worker.js");
 const inputDirectory = path.join(__dirname, "../input");
+const engine3Directory = path.resolve(
+  __dirname,
+  "../../engine-3-persistent-index"
+);
+
+// Engine 3 integration
+let engine3 = null;
+let indexVersion = null;
+let indexedDocuments = 0;
+let finalizing = false;
 
 // Document tracking
 let documents = [];
@@ -22,7 +31,6 @@ let stopped = false;
 
 const workers = new Map();
 const retryTasks = [];
-const engine2ReadyDocuments = [];
 
 // Clear worker timeout
 function clearWorkerTimeout(worker) {
@@ -53,8 +61,8 @@ function createWorker(workerId) {
 
   console.log(`Worker ${workerId} started. PID: ${child.pid}`);
 
-  // Handle messages received through IPC
-  child.on("message", (message) => {
+  // Handle worker messages
+  child.on("message", async (message) => {
     if (worker.handledExit) return;
 
     const task = worker.currentTask;
@@ -64,7 +72,6 @@ function createWorker(workerId) {
       return;
     }
 
-    // Accept only known response types
     if (
       message.type !== "DOCUMENT_SUCCESS" &&
       message.type !== "DOCUMENT_FAILURE"
@@ -73,60 +80,52 @@ function createWorker(workerId) {
       return;
     }
 
-    // Clear timeout when a valid response arrives
     clearWorkerTimeout(worker);
 
-    // Successful document processing
     if (message.type === "DOCUMENT_SUCCESS") {
       const result = message.result;
 
       try {
+        // Validate and prepare Engine 1 output
         const engine2Payload = prepareDocumentForEngine2(result);
-        engine2ReadyDocuments.push(engine2Payload);
 
-        console.log("Prepared for Engine 2:", engine2Payload.schemaVersion);
-
-        console.log(
-          `\nWorker ${workerId} successfully processed ${result.fileName}`
+        // Persist document and build postings in Engine 3
+        const insertedDocument = await engine3.insertDocument(
+          indexVersion.id,
+          engine2Payload
         );
 
-        console.log("Document ID:", result.documentId);
+        indexedDocuments++;
+        successfulDocuments++;
+        completedDocuments++;
+
+        console.log(
+          `\nWorker ${workerId} successfully processed and indexed ${result.fileName}`
+        );
+
+        console.log("Source Document ID:", result.documentId);
+        console.log("Persistent Document ID:", insertedDocument.document_id);
         console.log("File Type:", result.fileType);
         console.log("Words:", result.wordCount);
         console.log("Characters:", result.characterCount);
         console.log("Worker PID:", result.metadata.workerPid);
-
-        console.log(
-          "Processing Time:",
-          result.metadata.processingTimeMs,
-          "ms"
-        );
-
-        console.log("Status:", result.processingStatus);
-
-        if (result.metadata.ocrConfidence !== null) {
-          console.log(
-            "OCR Confidence:",
-            `${result.metadata.ocrConfidence}%`
-          );
-        }
-
-        successfulDocuments++;
-        completedDocuments++;
+        console.log("Processing Time:", result.metadata.processingTimeMs, "ms");
+        console.log("Tokens Indexed:", insertedDocument.tokenCount);
+        console.log("Unique Terms:", insertedDocument.uniqueTermCount);
+        console.log("PostgreSQL Persistence: COMPLETED");
 
       } catch (error) {
-        console.error("Invalid success response:", error.message);
+        console.error(
+          `Document indexing failed for ${result.fileName}:`,
+          error.message
+        );
 
         failedDocuments++;
         completedDocuments++;
       }
 
-    } else if (message.type === "DOCUMENT_FAILURE") {
-
-      // Document processing failure
-      console.error(
-        `Worker ${workerId} failed: ${message.error}`
-      );
+    } else {
+      console.error(`Worker ${workerId} failed: ${message.error}`);
 
       console.log("Error Code:", message.errorCode);
       console.log("Retryable:", message.retryable);
@@ -136,9 +135,7 @@ function createWorker(workerId) {
         message.retryable === true &&
         task.attempt <= MAX_RETRIES
       ) {
-        console.log(
-          `Retrying document. Next attempt: ${task.attempt + 1}`
-        );
+        console.log(`Retrying document. Next attempt: ${task.attempt + 1}`);
 
         retryTasks.push({
           ...task,
@@ -146,24 +143,22 @@ function createWorker(workerId) {
         });
 
       } else {
-        console.error(
-          "Document marked as permanently failed."
-        );
+        console.error("Document marked as permanently failed.");
 
         failedDocuments++;
         completedDocuments++;
       }
     }
 
-    // Release worker
+    // Release worker only after persistence has finished
     worker.busy = false;
     worker.currentTask = null;
 
     dispatchNext(worker);
-    checkCompletion();
+    void checkCompletion();
   });
 
-  // Handle worker process errors
+  // Handle worker errors
   child.on("error", (error) => {
     console.error(
       `Worker ${workerId} process error:`,
@@ -176,10 +171,7 @@ function createWorker(workerId) {
     if (worker.handledExit) return;
 
     worker.handledExit = true;
-
-    // Clear any active timeout
     clearWorkerTimeout(worker);
-
     workers.delete(workerId);
 
     console.log(
@@ -200,10 +192,6 @@ function createWorker(workerId) {
       worker.busy = false;
 
       if (task.attempt <= MAX_RETRIES) {
-        console.log(
-          `Retrying document. Attempt ${task.attempt + 1}`
-        );
-
         retryTasks.push({
           ...task,
           attempt: task.attempt + 1
@@ -217,19 +205,15 @@ function createWorker(workerId) {
       }
     }
 
-    // Replace terminated worker
     createWorker(workerId);
-
-    checkCompletion();
+    void checkCompletion();
   });
 
   dispatchNext(worker);
 }
 
-// Get next document to process
+// Get next document
 function getNextTask() {
-
-  // Retry interrupted documents first
   if (retryTasks.length > 0) {
     return retryTasks.shift();
   }
@@ -250,7 +234,7 @@ function getNextTask() {
   return null;
 }
 
-// Assign a document to an available worker
+// Assign document directly to an available worker
 function dispatchNext(worker) {
   if (
     stopped ||
@@ -264,7 +248,7 @@ function dispatchNext(worker) {
   const task = getNextTask();
 
   if (!task) {
-    checkCompletion();
+    void checkCompletion();
     return;
   }
 
@@ -275,9 +259,7 @@ function dispatchNext(worker) {
     `Assigning ${path.basename(task.filePath)} to Worker ${worker.id}`
   );
 
-  // Start document processing timeout
   worker.timeoutHandle = setTimeout(() => {
-
     if (
       !worker.busy ||
       !worker.currentTask ||
@@ -295,13 +277,10 @@ function dispatchNext(worker) {
       `Timeout limit: ${DOCUMENT_TIMEOUT_MS / 1000} seconds`
     );
 
-    // Kill unresponsive worker.
-    // Exit handler will recover the interrupted task.
     worker.process.kill();
 
   }, DOCUMENT_TIMEOUT_MS);
 
-  // Send task to worker
   worker.process.send(
     {
       type: "PROCESS_DOCUMENT",
@@ -320,20 +299,16 @@ function dispatchNext(worker) {
   );
 }
 
-// Check whether all documents have finished processing
-function checkCompletion() {
-  if (stopped) return;
+// Publish the persistent index after all documents finish
+async function checkCompletion() {
+  if (stopped || finalizing) return;
 
-  const allAssigned =
-    nextDocumentIndex >= documents.length;
+  const allAssigned = nextDocumentIndex >= documents.length;
+  const noRetries = retryTasks.length === 0;
 
-  const noRetries =
-    retryTasks.length === 0;
-
-  const allIdle =
-    [...workers.values()].every(
-      worker => !worker.busy
-    );
+  const allIdle = [...workers.values()].every(
+    worker => !worker.busy
+  );
 
   if (
     allAssigned &&
@@ -341,21 +316,65 @@ function checkCompletion() {
     allIdle &&
     completedDocuments === documents.length
   ) {
-    stopped = true;
+    finalizing = true;
 
-    console.log("\n===== ENGINE 1 SUMMARY =====");
-    console.log("Total documents:", documents.length);
-    console.log("Successful:", successfulDocuments);
-    console.log("Failed:", failedDocuments);
-    console.log("Prepared for Engine 2:", engine2ReadyDocuments.length);
-    console.log("============================\n");
+    try {
+      if (indexedDocuments === documents.length) {
+        const publishedVersion = await engine3.publishVersion(
+          indexVersion.id
+        );
 
-    // Gracefully disconnect workers
-    for (const worker of workers.values()) {
-      clearWorkerTimeout(worker);
+        console.log("\nPostgreSQL index version published.");
+        console.log("Index Version ID:", publishedVersion.id);
+        console.log("Version Number:", publishedVersion.version_number);
+        console.log("Index Status:", publishedVersion.status);
 
-      if (worker.process.connected) {
-        worker.process.disconnect();
+      } else {
+        await engine3.failVersion(indexVersion.id);
+
+        console.error(
+          "Not all documents were indexed. Index version marked FAILED."
+        );
+
+        process.exitCode = 1;
+      }
+
+    } catch (error) {
+      console.error("Index publication failed:", error.message);
+
+      try {
+        await engine3.failVersion(indexVersion.id);
+      } catch (failureError) {
+        console.error(
+          "Could not mark index version as FAILED:",
+          failureError.message
+        );
+      }
+
+      process.exitCode = 1;
+
+    } finally {
+      stopped = true;
+
+      console.log("\n===== ENGINE 1 SUMMARY =====");
+      console.log("Total documents:", documents.length);
+      console.log("Successfully indexed:", indexedDocuments);
+      console.log("Failed:", failedDocuments);
+      console.log("============================\n");
+
+      for (const worker of workers.values()) {
+        clearWorkerTimeout(worker);
+
+        if (worker.process.connected) {
+          worker.process.disconnect();
+        }
+      }
+
+      try {
+        await engine3.closeDatabaseConnection();
+      } catch (error) {
+        console.error("Database connection cleanup failed:", error.message);
+        process.exitCode = 1;
       }
     }
   }
@@ -370,11 +389,7 @@ async function getAllFiles(directory) {
   const files = [];
 
   for (const entry of entries) {
-
-    // Ignore hidden files and folders
-    if (entry.name.startsWith(".")) {
-      continue;
-    }
+    if (entry.name.startsWith(".")) continue;
 
     const fullPath = path.join(directory, entry.name);
 
@@ -390,8 +405,31 @@ async function getAllFiles(directory) {
   return files;
 }
 
-// Main execution function
+// Main execution
 async function main() {
+  // Load Engine 3 database configuration
+  process.loadEnvFile(
+    path.join(engine3Directory, ".env")
+  );
+
+  // Import Engine 3 repositories
+  const [
+    versionRepository,
+    documentRepository,
+    database
+  ] = await Promise.all([
+    import("../../engine-3-persistent-index/src/repository/indexVersionRepository.js"),
+    import("../../engine-3-persistent-index/src/repository/documentRepository.js"),
+    import("../../engine-3-persistent-index/src/database/pool.js")
+  ]);
+
+  engine3 = {
+    createBuildingVersion: versionRepository.createBuildingVersion,
+    publishVersion: versionRepository.publishVersion,
+    failVersion: versionRepository.failVersion,
+    insertDocument: documentRepository.insertDocument,
+    closeDatabaseConnection: database.closeDatabaseConnection
+  };
 
   // Ensure input directory exists
   await fs.mkdir(inputDirectory, {
@@ -403,13 +441,19 @@ async function main() {
 
   if (documents.length === 0) {
     console.log("No documents found in input directory.");
+    await engine3.closeDatabaseConnection();
     return;
   }
+
+  // Create persistent index version before processing
+  indexVersion = await engine3.createBuildingVersion();
 
   console.log("\n===== ENGINE 1 STARTED =====");
   console.log("Documents found:", documents.length);
   console.log("Worker limit:", WORKER_COUNT);
   console.log("Maximum retries:", MAX_RETRIES);
+  console.log("Index Version ID:", indexVersion.id);
+  console.log("Normalization Version:", indexVersion.normalization_version);
   console.log(
     "Document timeout:",
     DOCUMENT_TIMEOUT_MS / 1000,
@@ -424,7 +468,15 @@ async function main() {
 }
 
 // Start Engine 1
-main().catch(error => {
+main().catch(async (error) => {
   console.error("Engine 1 failed:", error);
   process.exitCode = 1;
+
+  if (engine3?.closeDatabaseConnection) {
+    try {
+      await engine3.closeDatabaseConnection();
+    } catch (closeError) {
+      console.error("Database cleanup failed:", closeError.message);
+    }
+  }
 });

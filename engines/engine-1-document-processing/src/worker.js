@@ -114,7 +114,7 @@ process.on("message", async (message) => {
     ) / 1_000_000;
 
     const structuredResult = {
-    documentId: taskId,
+    documentId: String(taskId),
     fileName: result.fileName,
     filePath: result.filePath,
     fileType: result.extension,
