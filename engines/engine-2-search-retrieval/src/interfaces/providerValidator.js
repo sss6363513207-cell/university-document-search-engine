@@ -24,6 +24,37 @@ export function validateSnapshot(snapshot) {
   return true;
 }
 
+export function validateSnapshotResponse(response, snapshot) {
+  if (
+    !response ||
+    typeof response !== "object" ||
+    typeof response.snapshotId !== "string" ||
+    typeof response.indexVersion !== "string" ||
+    !Object.hasOwn(response, "data")
+  ) {
+    throw new Engine2Error(
+      ERROR_CODES.INVALID_SEARCH_RESPONSE,
+      "Invalid snapshot response envelope"
+    );
+  }
+
+  if (response.snapshotId !== snapshot.snapshotId) {
+    throw new Engine2Error(
+      ERROR_CODES.SNAPSHOT_MISMATCH,
+      "Provider response belongs to a different snapshot"
+    );
+  }
+
+  if (response.indexVersion !== snapshot.indexVersion) {
+    throw new Engine2Error(
+      ERROR_CODES.INDEX_VERSION_MISMATCH,
+      "Provider response belongs to a different index version"
+    );
+  }
+
+  return response.data;
+}
+
 export function validatePostingsResponse(response, requestedTerms) {
   if (!response || typeof response !== "object") {
     throw new Engine2Error(

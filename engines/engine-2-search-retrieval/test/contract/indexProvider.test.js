@@ -5,6 +5,7 @@ import { IndexProvider } from "../../src/interfaces/indexProvider.js";
 
 import {
   validateSnapshot,
+  validateSnapshotResponse,
   validatePostingsResponse,
   validateDocumentStats,
   validateDocumentIds
@@ -23,19 +24,27 @@ class MockIndexProvider extends IndexProvider {
 
   async getPostings(terms) {
     return {
-      database: {
-        documentFrequency: 1,
-        postings: [{
-          documentId: "D101",
-          termFrequency: 2,
-          positions: [1, 3]
-        }]
-      }
-    };
-  }
+        snapshotId: "S001",
+        indexVersion: "V1",
+        data: {
+            database: {
+            documentFrequency: 1,
+            postings: [{
+                documentId: "D101",
+                termFrequency: 2,
+                positions: [1, 3]
+            }]
+           }
+          }
+        };
+     }
 
   async getDocumentStats() {
-    return { D101: 5 };
+    return {
+        snapshotId: "S001",
+        indexVersion: "V1",
+        data: { D101: 5 }
+        };
   }
 
   async getDocumentMetadata() {
@@ -43,7 +52,11 @@ class MockIndexProvider extends IndexProvider {
   }
 
   async getAllDocumentIds() {
-    return ["D101", "D102"];
+    return {
+        snapshotId: "S001",
+        indexVersion: "V1",
+        data: ["D101", "D102"]
+        };
   }
 
   async getDocumentContent() {
@@ -86,8 +99,13 @@ test("validates posting responses", async () => {
     "S001"
   );
 
+  const data = validateSnapshotResponse(
+    response,
+    await provider.openSnapshot()
+  );
+
   assert.equal(
-    validatePostingsResponse(response, ["database"]),
+    validatePostingsResponse(data, ["database"]),
     true
   );
 });
@@ -117,9 +135,14 @@ test("validates document statistics", async () => {
 test("validates sorted document IDs", async () => {
   const provider = new MockIndexProvider();
 
-  const ids = await provider.getAllDocumentIds("S001");
+  const response = await provider.getAllDocumentIds("S001");
 
-  assert.equal(validateDocumentIds(ids), true);
+  const data = validateSnapshotResponse(
+    response,
+    await provider.openSnapshot()
+  );
+
+  assert.equal(validateDocumentIds(data), true);
 });
 
 test("rejects unsorted document IDs", () => {
@@ -171,4 +194,56 @@ test("closes snapshot when provider data retrieval fails", async () => {
   );
 
   assert.equal(closed, true);
+});
+
+const validSnapshot = {
+  snapshotId: "S001",
+  indexVersion: "V1",
+  documentCount: 2,
+  averageDocumentLength: 5,
+  normalizationVersion: "1.0"
+};
+
+test("accepts a matching snapshot response", () => {
+  const response = {
+    snapshotId: "S001",
+    indexVersion: "V1",
+    data: { D101: 5 }
+  };
+
+  assert.deepEqual(
+    validateSnapshotResponse(response, validSnapshot),
+    { D101: 5 }
+  );
+});
+
+test("rejects a mismatched snapshot ID", () => {
+  assert.throws(
+    () => validateSnapshotResponse({
+      snapshotId: "S002",
+      indexVersion: "V1",
+      data: {}
+    }, validSnapshot),
+    error => error.code === "SNAPSHOT_MISMATCH"
+  );
+});
+
+test("rejects a mismatched index version", () => {
+  assert.throws(
+    () => validateSnapshotResponse({
+      snapshotId: "S001",
+      indexVersion: "V2",
+      data: {}
+    }, validSnapshot),
+    error => error.code === "INDEX_VERSION_MISMATCH"
+  );
+});
+
+test("rejects a missing response envelope", () => {
+  assert.throws(
+    () => validateSnapshotResponse({
+      D101: 5
+    }, validSnapshot),
+    error => error.code === "INVALID_SEARCH_RESPONSE"
+  );
 });

@@ -2,6 +2,7 @@ import { SearchIndexView } from "./searchIndexView.js";
 
 import {
   validateSnapshot,
+  validateSnapshotResponse,
   validatePostingsResponse,
   validateDocumentStats,
   validateDocumentIds
@@ -26,12 +27,22 @@ export async function createSearchIndexView(provider, ast) {
     validateSnapshot(snapshot);
 
     const [
-      postingsResponse,
-      documentIds
+      rawPostingsResponse,
+      rawDocumentIdsResponse
     ] = await Promise.all([
       provider.getPostings(queryTerms, snapshot.snapshotId),
       provider.getAllDocumentIds(snapshot.snapshotId)
     ]);
+
+    const postingsResponse = validateSnapshotResponse(
+      rawPostingsResponse,
+      snapshot
+    );
+
+    const documentIds = validateSnapshotResponse(
+      rawDocumentIdsResponse,
+      snapshot
+    );
 
     validatePostingsResponse(postingsResponse, queryTerms);
     validateDocumentIds(documentIds);
@@ -46,9 +57,14 @@ export async function createSearchIndexView(provider, ast) {
       )
     ].sort();
 
-    const statsResponse = await provider.getDocumentStats(
+    const rawStatsResponse = await provider.getDocumentStats(
       candidateIds,
       snapshot.snapshotId
+    );
+
+    const statsResponse = validateSnapshotResponse(
+      rawStatsResponse,
+      snapshot
     );
 
     validateDocumentStats(statsResponse, candidateIds);

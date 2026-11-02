@@ -1,3 +1,4 @@
+
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -6,6 +7,7 @@ import { search } from "../../src/searchService.js";
 class MockProvider {
   constructor() {
     this.closedSnapshots = [];
+
     this.documents = {
       D101: {
         title: "Database Systems",
@@ -32,7 +34,7 @@ class MockProvider {
     };
   }
 
-  async getPostings(terms) {
+  async getPostings(terms, snapshotId) {
     const allPostings = {
       database: [
         {
@@ -62,31 +64,47 @@ class MockProvider {
       ]
     };
 
-    return Object.fromEntries(
-      terms.map(term => [
-        term,
-        {
-          documentFrequency: (allPostings[term] ?? []).length,
-          postings: allPostings[term] ?? []
-        }
-      ])
-    );
+    return {
+      snapshotId,
+      indexVersion: "V1",
+      data: Object.fromEntries(
+        terms.map(term => [
+          term,
+          {
+            documentFrequency: (allPostings[term] ?? []).length,
+            postings: allPostings[term] ?? []
+          }
+        ])
+      )
+    };
   }
 
-  async getAllDocumentIds() {
-    return ["D101", "D102"];
+  async getAllDocumentIds(snapshotId) {
+    return {
+      snapshotId,
+      indexVersion: "V1",
+      data: ["D101", "D102"]
+    };
   }
 
-  async getDocumentStats(ids) {
-    return Object.fromEntries(
-      ids.map(id => [id, 6])
-    );
+  async getDocumentStats(ids, snapshotId) {
+    return {
+      snapshotId,
+      indexVersion: "V1",
+      data: Object.fromEntries(
+        ids.map(id => [id, 6])
+      )
+    };
   }
 
-  async getDocumentContent(ids) {
-    return Object.fromEntries(
-      ids.map(id => [id, this.documents[id]])
-    );
+  async getDocumentContent(ids, snapshotId) {
+    return {
+      snapshotId,
+      indexVersion: "V1",
+      data: Object.fromEntries(
+        ids.map(id => [id, this.documents[id]])
+      )
+    };
   }
 
   async closeSnapshot(id) {
@@ -287,3 +305,65 @@ test("reports total matches separately from Top-K results", async () => {
   assert.equal(response.results.length, 1);
 });
 
+test("normalizes uppercase terms before provider retrieval", async () => {
+  const provider = new MockProvider();
+  const requestedTerms = [];
+
+  const originalGetPostings = provider.getPostings.bind(provider);
+
+  provider.getPostings = async (terms, snapshotId) => {
+    requestedTerms.push(...terms);
+    return originalGetPostings(terms, snapshotId);
+  };
+
+  const response = await search(
+    { query: "DATABASE" },
+    provider
+  );
+
+  assert.deepEqual(requestedTerms, ["database"]);
+  assert.equal(response.pagination.totalResults, 1);
+  assert.equal(response.results[0].documentId, "D101");
+});
+
+test("normalizes punctuation before provider retrieval", async () => {
+  const provider = new MockProvider();
+  const requestedTerms = [];
+
+  const originalGetPostings = provider.getPostings.bind(provider);
+
+  provider.getPostings = async (terms, snapshotId) => {
+    requestedTerms.push(...terms);
+    return originalGetPostings(terms, snapshotId);
+  };
+
+  const response = await search(
+    { query: "Database," },
+    provider
+  );
+
+  assert.deepEqual(requestedTerms, ["database"]);
+  assert.equal(response.pagination.totalResults, 1);
+  assert.equal(response.results[0].documentId, "D101");
+});
+
+test("normalizes uppercase phrase queries consistently", async () => {
+  const provider = new MockProvider();
+  const requestedTerms = [];
+
+  const originalGetPostings = provider.getPostings.bind(provider);
+
+  provider.getPostings = async (terms, snapshotId) => {
+    requestedTerms.push(...terms);
+    return originalGetPostings(terms, snapshotId);
+  };
+
+  const response = await search(
+    { query: '"DATABASE SYSTEMS"' },
+    provider
+  );
+
+  assert.deepEqual(requestedTerms, ["database", "systems"]);
+  assert.equal(response.pagination.totalResults, 1);
+  assert.equal(response.results[0].documentId, "D101");
+});

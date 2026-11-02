@@ -1,7 +1,7 @@
 import { parseQuery } from "./query/parser.js";
 import { validateQueryAst } from "./query/queryValidator.js";
-import { normalizeQueryTerms } from "./query/queryNormalizer.js";
 import { collectAstTerms } from "./query/astTerms.js";
+import { normalizeQueryAst } from "./query/normalizeQueryAst.js";
 
 import { buildExecutionPlan } from "./planning/executionPlanner.js";
 import { executePlan } from "./planning/planExecutor.js";
@@ -11,7 +11,10 @@ import { buildSearchResults } from "./results/resultBuilder.js";
 
 import { createSearchIndexView } from "./interfaces/providerAdapter.js";
 
+
+
 import {
+  validateSnapshotResponse,
   validateDocumentStats,
   validateDocumentContent
 } from "./interfaces/providerValidator.js";
@@ -53,11 +56,13 @@ export async function search(request, provider) {
   let snapshot;
 
   try {
-    const ast = parseQuery(query);
+    const parsedAst = parseQuery(query);
+    validateQueryAst(parsedAst);
+
+    const ast = normalizeQueryAst(parsedAst);
     validateQueryAst(ast);
 
-    const rawTerms = collectAstTerms(ast);
-    const queryTerms = normalizeQueryTerms(rawTerms);
+    const queryTerms = collectAstTerms(ast);
 
     const adapterResult = await createSearchIndexView(
       provider,
@@ -71,9 +76,14 @@ export async function search(request, provider) {
     const plan = buildExecutionPlan(ast, index);
     const candidateDocumentIds = executePlan(plan, index);
 
-    const statsResponse = await provider.getDocumentStats(
-      candidateDocumentIds,
-      snapshot.snapshotId
+    const rawStatsResponse = await provider.getDocumentStats(
+    candidateDocumentIds,
+    snapshot.snapshotId
+    );
+
+    const statsResponse = validateSnapshotResponse(
+    rawStatsResponse,
+    snapshot
     );
 
     validateDocumentStats(statsResponse, candidateDocumentIds);
@@ -100,16 +110,20 @@ export async function search(request, provider) {
       result => result.documentId
     );
 
-    const documentResponse = await provider.getDocumentContent(
-      resultDocumentIds,
-      snapshot.snapshotId
+    const rawDocumentResponse = await provider.getDocumentContent(
+    resultDocumentIds,
+    snapshot.snapshotId
+    );
+
+    const documentResponse = validateSnapshotResponse(
+    rawDocumentResponse,
+    snapshot
     );
 
     validateDocumentContent(
-      documentResponse,
-      resultDocumentIds
+    documentResponse,
+    resultDocumentIds
     );
-
     const documents = resultDocumentIds.map(id => ({
       documentId: id,
       ...documentResponse[id]
