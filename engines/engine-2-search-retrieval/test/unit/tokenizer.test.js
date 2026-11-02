@@ -1,4 +1,3 @@
-
 import test from "node:test";
 import assert from "node:assert/strict";
 
@@ -9,7 +8,7 @@ import {
 } from "../../src/tokenizer/normalization.js";
 
 test("should expose normalization version", () => {
-  assert.equal(NORMALIZATION_VERSION, "1.0");
+  assert.equal(NORMALIZATION_VERSION, "1.1");
 });
 
 test("should convert text to lowercase", () => {
@@ -48,6 +47,12 @@ test("should preserve apostrophes inside words", () => {
     ]
   );
 });
+
+test("should normalize Unicode using NFC", () => {
+  assert.equal(normalizeText("cafe\u0301"), "café");
+});
+
+
 
 test("should reject non-string input", () => {
   assert.throws(() => tokenizeText(123), TypeError);

@@ -18,7 +18,7 @@ class MockIndexProvider extends IndexProvider {
       indexVersion: "V1",
       documentCount: 2,
       averageDocumentLength: 5,
-      normalizationVersion: "1.0"
+      normalizationVersion: "1.1"
     };
   }
 
@@ -201,7 +201,7 @@ const validSnapshot = {
   indexVersion: "V1",
   documentCount: 2,
   averageDocumentLength: 5,
-  normalizationVersion: "1.0"
+  normalizationVersion: "1.1"
 };
 
 test("accepts a matching snapshot response", () => {
@@ -246,4 +246,41 @@ test("rejects a missing response envelope", () => {
     }, validSnapshot),
     error => error.code === "INVALID_SEARCH_RESPONSE"
   );
+});
+
+test("rejects incompatible normalization version and closes snapshot", async () => {
+  let closed = false;
+  let postingsRequested = false;
+
+  const provider = new MockIndexProvider();
+
+  provider.openSnapshot = async () => ({
+    snapshotId: "S002",
+    indexVersion: "V1",
+    documentCount: 2,
+    averageDocumentLength: 5,
+    normalizationVersion: "1.0"
+  });
+
+  provider.getPostings = async () => {
+    postingsRequested = true;
+    throw new Error("Postings should not be requested");
+  };
+
+  provider.closeSnapshot = async (snapshotId) => {
+    assert.equal(snapshotId, "S002");
+    closed = true;
+    return true;
+  };
+
+  await assert.rejects(
+    createSearchIndexView(
+      provider,
+      { type: "TERM", value: "database" }
+    ),
+    error => error.code === "NORMALIZATION_VERSION_MISMATCH"
+  );
+
+  assert.equal(closed, true);
+  assert.equal(postingsRequested, false);
 });

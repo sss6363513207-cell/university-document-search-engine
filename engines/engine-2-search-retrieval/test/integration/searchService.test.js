@@ -30,7 +30,7 @@ class MockProvider {
       indexVersion: "V1",
       documentCount: 2,
       averageDocumentLength: 6,
-      normalizationVersion: "1.0"
+      normalizationVersion: "1.1"
     };
   }
 

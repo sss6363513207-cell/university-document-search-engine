@@ -1,6 +1,11 @@
 import { SearchIndexView } from "./searchIndexView.js";
 
 import {
+  Engine2Error,
+  ERROR_CODES
+} from "./errorCodes.js";
+
+import {
   validateSnapshot,
   validateSnapshotResponse,
   validatePostingsResponse,
@@ -8,6 +13,9 @@ import {
   validateDocumentIds
 } from "./providerValidator.js";
 
+import {
+  NORMALIZATION_VERSION
+} from "../tokenizer/normalization.js";
 import { collectAstTerms } from "../query/astTerms.js";
 
 export async function createSearchIndexView(provider, ast) {
@@ -25,6 +33,17 @@ export async function createSearchIndexView(provider, ast) {
   try {
     snapshot = await provider.openSnapshot();
     validateSnapshot(snapshot);
+
+    if (snapshot.normalizationVersion !== NORMALIZATION_VERSION) {
+      throw new Engine2Error(
+        ERROR_CODES.NORMALIZATION_VERSION_MISMATCH,
+        "Index normalization version is incompatible with Engine 2",
+        {
+          expectedVersion: NORMALIZATION_VERSION,
+          actualVersion: snapshot.normalizationVersion
+        }
+      );
+    }
 
     const [
       rawPostingsResponse,
